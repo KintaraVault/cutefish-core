@@ -125,7 +125,7 @@ void CrashDialog::show()
     m_window->setAlwaysOnTop(true);
     // Text lays out unhinted at every scale, so lines wrap where they always did.
     m_window->setHintedTextLayout(false);
-    m_window->setBackgroundColor(ColorId::SecondBackground);
+    m_window->setBackgroundColor(ColorId::PanelBackground);
     m_window->onCloseRequested = [this] {
         close();
     };
