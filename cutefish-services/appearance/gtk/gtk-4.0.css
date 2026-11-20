@@ -99,3 +99,34 @@ toolbarview > .top-bar .collapse-spacing headerbar > windowhandle > box {
   padding-top: 3px;
   padding-bottom: 3px;
 }
+
+/* Keep the installed theme's colors and contrast preferences. */
+popover > contents {
+  border-radius: 20px;
+}
+
+popover.menu > contents {
+  border-radius: 12px;
+  padding: 5px;
+}
+
+popover.menu modelbutton {
+  min-height: 24px;
+  padding: 0 8px;
+  border-radius: 8px;
+}
+
+window.dialog.csd:not(.maximized):not(.fullscreen),
+window.messagedialog.csd:not(.maximized):not(.fullscreen) {
+  border-radius: 26px;
+}
+
+window.dialog .dialog-action-area {
+  padding: 12px 16px 16px;
+}
+
+window.dialog .dialog-action-area button {
+  min-height: 28px;
+  padding: 0 12px;
+  border-radius: 999px;
+}

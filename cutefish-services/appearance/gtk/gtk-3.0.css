@@ -53,3 +53,34 @@ headerbar.default-decoration button.titlebutton,
   min-height: 0;
   min-width: 0;
 }
+
+/* Keep the installed theme's colors and contrast preferences. */
+menu {
+  border-radius: 12px;
+  padding: 5px;
+}
+
+menu > menuitem {
+  min-height: 24px;
+  padding: 0 8px;
+  border-radius: 8px;
+}
+
+popover {
+  border-radius: 20px;
+}
+
+dialog.background.csd:not(.maximized):not(.fullscreen),
+dialog.background.csd > decoration {
+  border-radius: 26px;
+}
+
+dialog .dialog-action-area {
+  padding: 12px 16px 16px;
+}
+
+dialog .dialog-action-area button {
+  min-height: 28px;
+  padding: 0 12px;
+  border-radius: 999px;
+}

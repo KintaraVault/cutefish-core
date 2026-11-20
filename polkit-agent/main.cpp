@@ -4,11 +4,13 @@
 #include "polkitagentlistener.h"
 
 #include "base/dbus.h"
+#include "base/i18n.h"
 #include "ui/application.h"
 
 int main(int argc, char *argv[])
 {
     cutefish::ui::Application app(argc, argv);
+    cutefish::i18n::setDomain("cutefish-core");
     app.setApplicationId("cutefish-polkit-agent");
 
     PolKitAgentListener listener(cutefish::base::dbus::Connection::system());

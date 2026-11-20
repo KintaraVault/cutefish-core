@@ -588,7 +588,7 @@ void PermissionPrompt::show()
 {
     m_window = std::make_unique<Window>();
     m_window->setTitle(m_content->title());
-    m_window->setSkipTaskbar(true);
+    m_window->setDialogAppearance();
     m_window->setAlwaysOnTop(true);
     // Text lays out unhinted at every scale, so lines wrap where they always did.
     m_window->setHintedTextLayout(false);

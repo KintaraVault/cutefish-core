@@ -271,3 +271,11 @@ msgstr "Cutefish (Wayland)"
 #: session/cutefish-wayland.desktop
 msgid "Cutefish desktop session"
 msgstr "Сеанс рабочего стола Cutefish"
+msgid "Authentication Required"
+msgstr "Требуется аутентификация"
+
+msgid "Authenticate"
+msgstr "Подтвердить"
+
+msgid "Password"
+msgstr "Пароль"

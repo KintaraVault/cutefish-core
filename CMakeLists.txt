@@ -22,6 +22,6 @@ add_subdirectory(screenrecorder)
 add_subdirectory(polkit-agent)
 add_subdirectory(cutefish-services)
 
-cutefish_add_translations(cutefish-core SOURCES cutefish-services session
+cutefish_add_translations(cutefish-core SOURCES cutefish-services session polkit-agent
                           DESKTOP_FILES session/cutefish-wayland.desktop)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/cutefish-wayland.desktop DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/wayland-sessions/)

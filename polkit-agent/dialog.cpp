@@ -5,8 +5,11 @@
 
 #include <cmath>
 
+#include "base/i18n.h"
 #include "ui/cell_layout.h"
+#include "ui/design_metrics.h"
 #include "ui/dialog_window.h"
+#include "ui/icon.h"
 #include "ui/keys.h"
 #include "ui/label.h"
 #include "ui/layout.h"
@@ -16,10 +19,9 @@
 #include "ui/window.h"
 
 using namespace cutefish::ui;
+using cutefish::i18n::tr;
 
-static constexpr double kWidth = 420;
-static constexpr double kMargin = 16;
-static constexpr double kRadius = 16;
+static constexpr double kWidth = 390;
 // A drag this far from the press moves the window.
 static constexpr double kDragDistance = 10;
 
@@ -31,11 +33,6 @@ public:
     bool acceptsPointer() const override { return true; }
 
 protected:
-    void paint(Painter &painter) override
-    {
-        painter.drawSmoothRectangle(localRect(), kRadius, Theme::current().secondBackground);
-    }
-
     void pointerPress(const PointerEvent &event) override
     {
         m_pressed = event.button == MouseButton::Left;
@@ -71,26 +68,29 @@ Dialog::~Dialog() = default;
 void Dialog::show()
 {
     m_window = std::make_unique<Window>();
-    m_window->setTitle("Authentication Required");
-    m_window->setSkipTaskbar(true);
+    m_window->setTitle(tr("Authentication Required"));
+    m_window->setDialogAppearance();
     // Text lays out unhinted at every scale, so lines wrap where they always did.
     m_window->setHintedTextLayout(false);
     m_window->setAlwaysOnTop(true);
-    m_window->setBackgroundColor(Color {0, 0, 0, 0});
+    m_window->setBackgroundColor(ColorId::PanelBackground);
     m_window->onCloseRequested = [this] {
         if (onCancel)
             onCancel();
     };
 
     auto content = std::make_unique<Content>();
-    content->setPadding(Margins::all(kMargin));
-    content->setSpacing(16);
+    content->setPadding(Margins::all(design::dialogInset));
+    content->setSpacing(12);
+
+    auto *icon = content->addChild<ThemeIcon>("dialog-password", 32);
+    icon->setLayoutHints({.preferredWidth = 32, .preferredHeight = 32});
 
     // A Column, not a layout: its labels are as wide as the window less the margins.
     auto *texts = content->addChild<Column>();
     texts->setSpacing(4);
     texts->setLayoutHints({.fillWidth = true});
-    auto *title = texts->addChild<Label>("Authentication Required");
+    auto *title = texts->addChild<Label>(tr("Authentication Required"));
     title->setLayoutHints({.fillWidth = true});
     title->setFontSize(14);
     title->setWeight(600);
@@ -101,16 +101,22 @@ void Dialog::show()
     message->setFixedLineHeight(20);
     message->setColor(ColorId::DisabledText);
 
-    auto *identity = content->addChild<TextField>(m_identity);
-    identity->setEnabled(false);
+    auto *identity = content->addChild<Label>(m_identity);
+    identity->setElide(Label::Elide::Middle);
     identity->setLayoutHints({.fillWidth = true});
 
     m_passwordInput = content->addChild<TextField>();
     m_passwordInput->setLayoutHints({.fillWidth = true});
-    m_passwordInput->setPlaceholder(m_prompt.empty() ? std::string("Password") : m_prompt);
+    m_passwordInput->setName("authenticationResponse");
+    m_passwordInput->setPlaceholder(m_prompt.empty() ? tr("Password") : m_prompt);
+    m_passwordInput->setClipboardEnabled(false);
+    m_passwordInput->setPasswordCharacter("●");
     m_passwordInput->setEchoMode(m_echo ? TextField::EchoMode::Normal : TextField::EchoMode::Password);
     m_passwordInput->onAccepted = [this] {
         submit();
+    };
+    m_passwordInput->onTextChanged = [this] {
+        m_doneButton->setEnabled(m_passwordInput->isEnabled() && !m_passwordInput->text().empty());
     };
 
     m_noticeLabel = content->addChild<Label>();
@@ -121,12 +127,13 @@ void Dialog::show()
     auto *buttons = content->addChild<RowLayout>();
     buttons->setSpacing(8);
     buttons->setLayoutHints({.horizontalAlignment = Alignment::End});
-    auto *cancel = buttons->addChild<DialogButton>("Cancel");
+    auto *cancel = buttons->addChild<DialogButton>(tr("Cancel"));
     cancel->onClicked = [this] {
         if (onCancel)
             onCancel();
     };
-    m_doneButton = buttons->addChild<DialogButton>("Authenticate", true);
+    m_doneButton = buttons->addChild<DialogButton>(tr("Authenticate"), true);
+    m_doneButton->setEnabled(false);
     m_doneButton->onClicked = [this] {
         submit();
     };
@@ -153,7 +160,7 @@ void Dialog::hide()
 
 void Dialog::submit()
 {
-    if (!m_passwordInput || m_passwordInput->text().empty())
+    if (!m_passwordInput || !m_passwordInput->isEnabled() || m_passwordInput->text().empty())
         return;
 
     m_doneButton->setEnabled(false);
@@ -166,7 +173,7 @@ void Dialog::submit()
 
 void Dialog::ready()
 {
-    m_doneButton->setEnabled(true);
+    m_doneButton->setEnabled(!m_passwordInput->text().empty());
     m_passwordInput->setEnabled(true);
     m_passwordInput->setFocus();
 }
@@ -187,7 +194,7 @@ void Dialog::setRequest(const std::string &prompt, bool echo)
 
     if (!m_passwordInput)
         return;
-    m_passwordInput->setPlaceholder(m_prompt.empty() ? std::string("Password") : m_prompt);
+    m_passwordInput->setPlaceholder(m_prompt.empty() ? tr("Password") : m_prompt);
     m_passwordInput->setEchoMode(m_echo ? TextField::EchoMode::Normal : TextField::EchoMode::Password);
 
     // Each further PAM question starts empty; a field still being typed in is
