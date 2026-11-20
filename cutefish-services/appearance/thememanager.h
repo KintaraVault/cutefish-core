@@ -13,6 +13,7 @@
 #include "base/dbus.h"
 #include "base/settings.h"
 #include "base/signal.h"
+#include "ui/appearance_style.h"
 
 namespace cutefish::powerprofiles {
 class PowerProfiles;
@@ -107,6 +108,8 @@ private:
     void emitSignal(const std::string &name, const Args &...args);
     template<typename T>
     void write(const std::string &key, const T &value);
+    template<typename T>
+    void updateStyle(T &current, T value, const char *key, const char *signal);
 
     cutefish::base::Settings &m_settings;
     cutefish::base::dbus::Connection *m_session;
@@ -120,6 +123,7 @@ private:
     bool m_continuousCorners = true;
     bool m_reduceTransparency = false;
     bool m_wallpaperTinting = true;
+    cutefish::ui::AppearanceStyle m_style;
     bool m_coloredWindowControls = true;
     int m_accentColor = 0;
 

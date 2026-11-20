@@ -9,12 +9,15 @@
 #include "wallpapermanager.h"
 
 #include <algorithm>
+#include <type_traits>
 
 #include "common/language_environment.h"
 #include "cutefish/powerprofiles/power_profiles.h"
+#include "ui/theme.h"
 #include "ui/window_controls.h"
 
 using namespace cutefish::base;
+namespace style = cutefish::ui::appearance_style;
 
 static const std::string s_systemFontName = "Appearance/Font";
 static const std::string s_systemFixedFontName = "Appearance/FixedFont";
@@ -50,9 +53,15 @@ ThemeManager::ThemeManager(Settings &settings, dbus::Connection *session, dbus::
     m_continuousCorners = m_settings.boolValue("Appearance/ContinuousCorners", true);
     m_reduceTransparency = m_settings.boolValue("Appearance/ReduceTransparency", false);
     m_wallpaperTinting = m_settings.boolValue("Appearance/WallpaperTinting", true);
+    m_style.glass = style::glassValue(m_settings.doubleValue("Appearance/GlassStrength", 0.5));
+    m_style.icons = style::iconStyle(m_settings.intValue("Appearance/IconStyle", 0));
+    m_style.tone = style::iconTone(m_settings.intValue("Appearance/IconTone", 2));
+    m_style.folderColor = style::colorIndex(m_settings.intValue("Appearance/FolderColor", 0));
+    m_style.tintColor = style::colorIndex(m_settings.intValue("Appearance/IconTint", 0));
     m_coloredWindowControls = m_settings.boolValue(
         std::string("Appearance/") + cutefish::ui::window_controls::kColoredPreference, true);
-    m_accentColor = int(m_settings.intValue("Appearance/AccentColor", 0));
+    m_style.textHighlight = style::colorIndex(m_settings.intValue("Appearance/TextHighlight", 0));
+    m_accentColor = int(m_settings.intValue("Appearance/AccentColor", -1));
     m_cursorTheme = m_settings.stringValue("Appearance/CursorTheme", "default");
     m_cursorSize = int(m_settings.intValue("Appearance/CursorSize", 24));
     m_iconTheme = m_settings.stringValue("Appearance/IconTheme", "Cutefish");
@@ -62,7 +71,7 @@ ThemeManager::ThemeManager(Settings &settings, dbus::Connection *session, dbus::
         m_settings.setValue(s_systemFixedFontName, "Noto Mono");
 
     if (!m_settings.contains(s_systemFontName))
-        m_settings.setValue(s_systemFontName, "Inter");
+        m_settings.setValue(s_systemFontName, cutefish::ui::Theme::kDefaultFontFamily);
     m_settings.sync();
 
     m_powerProfiles = std::make_unique<cutefish::powerprofiles::PowerProfiles>(system);
@@ -94,6 +103,21 @@ ThemeManager::ThemeManager(Settings &settings, dbus::Connection *session, dbus::
 
 ThemeManager::~ThemeManager() = default;
 
+template<typename T>
+void ThemeManager::updateStyle(T &current, T value, const char *key, const char *signal)
+{
+    if (current == value)
+        return;
+    current = value;
+    if constexpr (std::is_enum_v<T>) {
+        write(key, int32_t(value));
+        emitSignal(signal, int32_t(value));
+    } else {
+        write(key, value);
+        emitSignal(signal, value);
+    }
+}
+
 bool ThemeManager::publish()
 {
     if (!m_session)
@@ -109,6 +133,24 @@ bool ThemeManager::publish()
                 {{"reduceTransparency"}, {}});
     o.addMethod("setWallpaperTinting", [this](bool value) { setWallpaperTinting(value); },
                 {{"wallpaperTinting"}, {}});
+    o.addMethod("setGlassStrength", [this](double value) {
+        updateStyle(m_style.glass, style::glassValue(value), "GlassStrength", "glassStrengthChanged");
+    }, {{"strength"}, {}});
+    o.addMethod("setIconStyle", [this](int32_t value) {
+        updateStyle(m_style.icons, style::iconStyle(value), "IconStyle", "iconStyleChanged");
+    }, {{"style"}, {}});
+    o.addMethod("setIconTone", [this](int32_t value) {
+        updateStyle(m_style.tone, style::iconTone(value), "IconTone", "iconToneChanged");
+    }, {{"tone"}, {}});
+    o.addMethod("setFolderColor", [this](int32_t value) {
+        updateStyle(m_style.folderColor, style::colorIndex(value), "FolderColor", "folderColorChanged");
+    }, {{"color"}, {}});
+    o.addMethod("setIconTint", [this](int32_t value) {
+        updateStyle(m_style.tintColor, style::colorIndex(value), "IconTint", "iconTintChanged");
+    }, {{"color"}, {}});
+    o.addMethod("setTextHighlight", [this](int32_t value) {
+        updateStyle(m_style.textHighlight, style::colorIndex(value), "TextHighlight", "textHighlightChanged");
+    }, {{"color"}, {}});
     o.addMethod("setColoredWindowControls", [this](bool value) { setColoredWindowControls(value); },
                 {{"coloredWindowControls"}, {}});
     o.addMethod("setSystemFont", [this](const std::string &value) { setSystemFont(value); }, {{"fontFamily"}, {}});
@@ -142,6 +184,12 @@ bool ThemeManager::publish()
     o.addProperty("continuousCorners", [this] { return continuousCorners(); });
     o.addProperty("reduceTransparency", [this] { return reduceTransparency(); });
     o.addProperty("wallpaperTinting", [this] { return wallpaperTinting(); });
+    o.addProperty("glassStrength", [this] { return m_style.glass; });
+    o.addProperty("iconStyle", [this] { return int32_t(m_style.icons); });
+    o.addProperty("iconTone", [this] { return int32_t(m_style.tone); });
+    o.addProperty("folderColor", [this] { return int32_t(m_style.folderColor); });
+    o.addProperty("iconTint", [this] { return int32_t(m_style.tintColor); });
+    o.addProperty("textHighlight", [this] { return int32_t(m_style.textHighlight); });
     o.addProperty("coloredWindowControls", [this] { return coloredWindowControls(); });
     o.addProperty("systemFont", [this] { return systemFont(); });
     o.addProperty("systemFixedFont", [this] { return systemFixedFont(); });
@@ -165,6 +213,12 @@ bool ThemeManager::publish()
     o.addSignal("continuousCornersChanged", "b");
     o.addSignal("reduceTransparencyChanged", "b");
     o.addSignal("wallpaperTintingChanged", "b");
+    o.addSignal("glassStrengthChanged", "d");
+    o.addSignal("iconStyleChanged", "i");
+    o.addSignal("iconToneChanged", "i");
+    o.addSignal("folderColorChanged", "i");
+    o.addSignal("iconTintChanged", "i");
+    o.addSignal("textHighlightChanged", "i");
     o.addSignal("coloredWindowControlsChanged", "b");
     o.addSignal("accentColorChanged", "i");
     o.addSignal("backgroundTypeChanged", "");
@@ -281,6 +335,8 @@ int ThemeManager::accentColor()
 
 void ThemeManager::setAccentColor(int accentColor)
 {
+    if (accentColor < -1 || accentColor >= int(cutefish::ui::accent::palette.size()))
+        return;
     if (m_accentColor == accentColor)
         return;
 
@@ -326,7 +382,7 @@ void ThemeManager::setCursorSize(int size)
 
 std::string ThemeManager::systemFont()
 {
-    return m_settings.stringValue(s_systemFontName, "Inter");
+    return m_settings.stringValue(s_systemFontName, cutefish::ui::Theme::kDefaultFontFamily);
 }
 
 void ThemeManager::setSystemFont(const std::string &fontFamily)

@@ -13,6 +13,27 @@
     <method name="setReduceTransparency">
         <arg name="reduceTransparency" type="b" direction="in"/>
     </method>
+    <method name="setWallpaperTinting">
+        <arg name="wallpaperTinting" type="b" direction="in"/>
+    </method>
+    <method name="setGlassStrength">
+        <arg name="strength" type="d" direction="in"/>
+    </method>
+    <method name="setIconStyle">
+        <arg name="style" type="i" direction="in"/>
+    </method>
+    <method name="setIconTone">
+        <arg name="tone" type="i" direction="in"/>
+    </method>
+    <method name="setFolderColor">
+        <arg name="color" type="i" direction="in"/>
+    </method>
+    <method name="setIconTint">
+      <arg name="color" type="i" direction="in"/>
+    </method>
+    <method name="setTextHighlight">
+      <arg name="color" type="i" direction="in"/>
+    </method>
     <method name="setColoredWindowControls">
         <arg name="coloredWindowControls" type="b" direction="in"/>
     </method>
@@ -70,6 +91,13 @@
     <property name="darkModeSchedule" type="i" access="read"/>
     <property name="continuousCorners" type="b" access="read"/>
     <property name="reduceTransparency" type="b" access="read"/>
+    <property name="wallpaperTinting" type="b" access="read"/>
+    <property name="glassStrength" type="d" access="read"/>
+    <property name="iconStyle" type="i" access="read"/>
+    <property name="iconTone" type="i" access="read"/>
+    <property name="folderColor" type="i" access="read"/>
+    <property name="iconTint" type="i" access="read"/>
+    <property name="textHighlight" type="i" access="read"/>
     <property name="coloredWindowControls" type="b" access="read"/>
     <property name="systemFont" type="s" access="read"/>
     <property name="systemFixedFont" type="s" access="read"/>
@@ -104,6 +132,13 @@
     <signal name="reduceTransparencyChanged">
         <arg type="b"/>
     </signal>
+    <signal name="wallpaperTintingChanged"><arg type="b"/></signal>
+    <signal name="glassStrengthChanged"><arg type="d"/></signal>
+    <signal name="iconStyleChanged"><arg type="i"/></signal>
+    <signal name="iconToneChanged"><arg type="i"/></signal>
+    <signal name="folderColorChanged"><arg type="i"/></signal>
+    <signal name="iconTintChanged"><arg type="i"/></signal>
+    <signal name="textHighlightChanged"><arg type="i"/></signal>
     <signal name="coloredWindowControlsChanged">
         <arg type="b"/>
     </signal>
