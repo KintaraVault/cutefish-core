@@ -49,6 +49,9 @@ public:
     bool reduceTransparency() const;
     void setReduceTransparency(bool value);
 
+    bool wallpaperTinting() const;
+    void setWallpaperTinting(bool value);
+
     bool coloredWindowControls() const;
     void setColoredWindowControls(bool value);
 
@@ -116,7 +119,8 @@ private:
 
     bool m_continuousCorners = true;
     bool m_reduceTransparency = false;
-    bool m_coloredWindowControls = false;
+    bool m_wallpaperTinting = true;
+    bool m_coloredWindowControls = true;
     int m_accentColor = 0;
 
     std::string m_cursorTheme;

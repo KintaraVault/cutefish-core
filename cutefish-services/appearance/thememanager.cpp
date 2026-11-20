@@ -12,6 +12,7 @@
 
 #include "common/language_environment.h"
 #include "cutefish/powerprofiles/power_profiles.h"
+#include "ui/window_controls.h"
 
 using namespace cutefish::base;
 
@@ -48,7 +49,9 @@ ThemeManager::ThemeManager(Settings &settings, dbus::Connection *session, dbus::
     // init value
     m_continuousCorners = m_settings.boolValue("Appearance/ContinuousCorners", true);
     m_reduceTransparency = m_settings.boolValue("Appearance/ReduceTransparency", false);
-    m_coloredWindowControls = m_settings.boolValue("Appearance/ColoredWindowControls", false);
+    m_wallpaperTinting = m_settings.boolValue("Appearance/WallpaperTinting", true);
+    m_coloredWindowControls = m_settings.boolValue(
+        std::string("Appearance/") + cutefish::ui::window_controls::kColoredPreference, true);
     m_accentColor = int(m_settings.intValue("Appearance/AccentColor", 0));
     m_cursorTheme = m_settings.stringValue("Appearance/CursorTheme", "default");
     m_cursorSize = int(m_settings.intValue("Appearance/CursorSize", 24));
@@ -104,6 +107,8 @@ bool ThemeManager::publish()
                 {{"continuousCorners"}, {}});
     o.addMethod("setReduceTransparency", [this](bool value) { setReduceTransparency(value); },
                 {{"reduceTransparency"}, {}});
+    o.addMethod("setWallpaperTinting", [this](bool value) { setWallpaperTinting(value); },
+                {{"wallpaperTinting"}, {}});
     o.addMethod("setColoredWindowControls", [this](bool value) { setColoredWindowControls(value); },
                 {{"coloredWindowControls"}, {}});
     o.addMethod("setSystemFont", [this](const std::string &value) { setSystemFont(value); }, {{"fontFamily"}, {}});
@@ -136,6 +141,7 @@ bool ThemeManager::publish()
     o.addProperty("darkModeSchedule", [this] { return int32_t(darkModeSchedule()); });
     o.addProperty("continuousCorners", [this] { return continuousCorners(); });
     o.addProperty("reduceTransparency", [this] { return reduceTransparency(); });
+    o.addProperty("wallpaperTinting", [this] { return wallpaperTinting(); });
     o.addProperty("coloredWindowControls", [this] { return coloredWindowControls(); });
     o.addProperty("systemFont", [this] { return systemFont(); });
     o.addProperty("systemFixedFont", [this] { return systemFixedFont(); });
@@ -158,6 +164,7 @@ bool ThemeManager::publish()
     o.addSignal("wallpaperFolderImagesChanged", "s");
     o.addSignal("continuousCornersChanged", "b");
     o.addSignal("reduceTransparencyChanged", "b");
+    o.addSignal("wallpaperTintingChanged", "b");
     o.addSignal("coloredWindowControlsChanged", "b");
     o.addSignal("accentColorChanged", "i");
     o.addSignal("backgroundTypeChanged", "");
@@ -237,6 +244,20 @@ void ThemeManager::setReduceTransparency(bool value)
     emitSignal("reduceTransparencyChanged", m_reduceTransparency);
 }
 
+bool ThemeManager::wallpaperTinting() const
+{
+    return m_wallpaperTinting;
+}
+
+void ThemeManager::setWallpaperTinting(bool value)
+{
+    if (m_wallpaperTinting == value)
+        return;
+    m_wallpaperTinting = value;
+    write("WallpaperTinting", value);
+    emitSignal("wallpaperTintingChanged", value);
+}
+
 bool ThemeManager::coloredWindowControls() const
 {
     return m_coloredWindowControls;
@@ -248,7 +269,7 @@ void ThemeManager::setColoredWindowControls(bool value)
         return;
 
     m_coloredWindowControls = value;
-    write("ColoredWindowControls", m_coloredWindowControls);
+    write(cutefish::ui::window_controls::kColoredPreference, m_coloredWindowControls);
 
     emitSignal("coloredWindowControlsChanged", m_coloredWindowControls);
 }
